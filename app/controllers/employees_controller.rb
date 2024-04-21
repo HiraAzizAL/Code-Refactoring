@@ -3,7 +3,11 @@ require 'net/https'
 
 class EmployeesController < ApplicationController
   before_action :authenticate_user!
-  
+
+    def new
+      @employee = Employee.new
+    end
+
     def index
       if params[:page].present?
         uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees?page=#{params[:page]}")
@@ -13,7 +17,7 @@ class EmployeesController < ApplicationController
       @response = Net::HTTP.get(uri)
       @employees = JSON.parse(@response)
     end
-  
+
     def edit
       uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees/#{params[:id]}")
       @response = Net::HTTP.get(uri)
@@ -55,7 +59,7 @@ class EmployeesController < ApplicationController
 
       redirect_to employee_path(@employee.dig("id"))
     end
-  
+
     def update
 
       uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees/#{params[:id]}")
@@ -85,5 +89,5 @@ class EmployeesController < ApplicationController
       @employee = JSON.parse(response.body)
 
       redirect_to edit_employee_path(@employee.dig("id"))
-    end  
+    end
 end

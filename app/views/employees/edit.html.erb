@@ -1,9 +1,8 @@
 <div class="container">
-  <h1>Editing Employee</h1>
+<h1>Editing Employee</h1>
 
-  <%= form_tag employee_path(employee.dig("id")), :method => :put do %>
-    <%= render 'form' %>
-  <% end %>
 
+<%= form_tag employee_path(@employee.dig("id")), :method => :put do %>
+  <%= render 'form', locals: { employee: @employee } %>
 </div>
 <br>

@@ -3,7 +3,7 @@
   <h1>New Employee</h1>
 
   <%= form_tag employees_path do %>
-    <%= render 'form' %>
+    <%= render 'form', locals: { employee: @employee } %>
   <% end %>
 
   <%= link_to "Back", employees_path %>
