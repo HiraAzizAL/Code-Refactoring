@@ -3,87 +3,58 @@ require 'net/https'
 
 class EmployeesController < ApplicationController
   before_action :authenticate_user!
-  
+  before_action :set_url
+
     def index
       if params[:page].present?
-        uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees?page=#{params[:page]}")
+        uri = URI("#{@url}?page=#{params[:page]}")
       else
-        uri = URI('https://dummy-employees-api-8bad748cda19.herokuapp.com/employees')
+        uri = URI('#{@url}')
       end
-      @response = Net::HTTP.get(uri)
-      @employees = JSON.parse(@response)
+      @employees = parse_response(uri)
     end
-  
+
     def edit
-      uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees/#{params[:id]}")
-      @response = Net::HTTP.get(uri)
-      @employee = JSON.parse(@response)
+      uri = URI("#{@url}/#{params[:id]}")
+      @employee = parse_response(uri)
     end
 
     def show
-      uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees/#{params[:id]}")
-      @response = Net::HTTP.get(uri)
-      @employee = JSON.parse(@response)
+      uri = URI("#{@url}/#{params[:id]}")
+      @employee = parse_response(uri)
     end
 
     def create
-      uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees/#{params[:id]}")
+      @employee = Employee::RefactorEmployeeService.create_employee(params, @url)
 
-
-      http = Net::HTTP.new(uri.host, uri.port)
-
-      http.use_ssl = (uri.scheme == 'https')
-
-      request = Net::HTTP::Post.new(uri.path)
-
-      request['Content-Type'] = 'application/json'
-
-      body = {
-        "name": params[:name],
-        "position": params[:position],
-        "date_of_birth": params[:date_of_birth],
-        "salary": params[:salary]
-      }.to_json
-      request.body = body
-
-      response = http.request(request)
-
-      puts "Response Code: #{response.code}"
-      puts "Response Body: #{response.body}"
-
-      @employee = JSON.parse(response.body)
-
-      redirect_to employee_path(@employee.dig("id"))
+      if @employee
+        redirect_to employee_path(@employee.dig("id"))
+      else
+        flash[:error] = "Failed to create employee"
+        redirect_to root_path
+      end
     end
-  
+
     def update
+      @employee = Employee::RefactorEmployeeService.update_employee(params, @url)
 
-      uri = URI("https://dummy-employees-api-8bad748cda19.herokuapp.com/employees/#{params[:id]}")
+      if @employee
+        redirect_to edit_employee_path(@employee["id"])
+      else
+        flash[:error] = "Failed to update employee"
+        redirect_to root_path
+      end
+    end
 
+    private
 
-      http = Net::HTTP.new(uri.host, uri.port)
+    def set_url
+      @url = "https://dummy-employees-api-8bad748cda19.herokuapp.com/employees"
+    end
 
-      http.use_ssl = (uri.scheme == 'https')
-
-      request = Net::HTTP::Put.new(uri.path)
-
-      request['Content-Type'] = 'application/json'
-
-      body = {
-        "name": params[:name],
-        "position": params[:position],
-        "date_of_birth": params[:date_of_birth],
-        "salary": params[:salary]
-      }.to_json
-      request.body = body
-
-      response = http.request(request)
-
-      puts "Response Code: #{response.code}"
-      puts "Response Body: #{response.body}"
-
-      @employee = JSON.parse(response.body)
-
-      redirect_to edit_employee_path(@employee.dig("id"))
-    end  
+    def parse_response(uri)
+      response = Net::HTTP.get(uri)
+      JSON.parse(response)
+    end
+  end
 end
